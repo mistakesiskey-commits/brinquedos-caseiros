@@ -343,79 +343,33 @@ const MENSAGENS_LOGIN = {
 const mensagem = (lista, codigo, padrao) => (lista[codigo] ? tr(...lista[codigo]) : padrao);
 
 function Login({ marca, aoEntrar }) {
-  const [modo, setModo] = useState('email'); // 'email' | 'cpf'
   const [email, setEmail] = useState('');
   const [erro, setErro] = useState('');
   const [enviando, setEnviando] = useState(false);
-  const [limite, setLimite] = useState(null); // conta aberta no máximo de aparelhos: {limite, ativos}
-  const [pedeCpf, setPedeCpf] = useState(false); // conta suspeita: o servidor pede o CPF da compra (migração 20261019080000)
-  const [cpf, setCpf] = useState('');
 
-  if (modo === 'cpf') {
-    return html`<${ErreiEmail} marca=${marca} aoEntrar=${aoEntrar} aoVoltar=${() => setModo('email')} />`;
-  }
-
-  async function entrar(forcar) {
+  async function entrar() {
     setErro('');
     setEnviando(true);
-    try {
-      const r = await api('/login', { metodo: 'POST', corpo: { marca: marca.slug, email, origem: origemDoLogin(), ...(pedeCpf ? { cpf } : {}), ...(forcar ? { forcar: true } : {}) } });
-      aoEntrar(r);
-    } catch (e) {
-      if (e.codigo === 'limite_aparelhos') { setLimite(e.dados || {}); setEnviando(false); return; }
-      // CPF pedido (ou errado) também pode vir da tela do limite ("encerrar as outras sessões"): volta para o
-      // formulário, que tem o campo de CPF; depois de confirmar, o limite aparece de novo e o "forçar" já leva o CPF.
-      if (e.codigo === 'cpf_necessario') {
-        setLimite(null); setPedeCpf(true); setEnviando(false);
-        setTimeout(() => document.getElementById('cpf-login')?.focus(), 50);
-        return;
-      }
-      if (e.codigo === 'cpf_incorreto') {
-        setLimite(null); setPedeCpf(true);
-        setErro('O CPF não confere com o da compra. Confira os números e tente novamente.');
-        setEnviando(false);
-        return;
-      }
-      // Sem CPF (marcas em espanhol): não há "alterar seu e-mail", só o suporte.
-      setErro(
-        e.codigo === 'sem_acesso'
-          ? ES
-            ? html`No encontramos una compra con este correo. Verifica que sea el mismo correo que usaste en el pago.
-                ${marca.suporte?.email && html`${' '}Si necesitas ayuda, escríbenos a <a href=${'mailto:' + marca.suporte.email}>${marca.suporte.email}</a>.`}`
-            : html`Não encontramos uma compra com este e-mail. Confira se é o mesmo e-mail que você usou no pagamento
-              ou clique${' '}<button type="button" class="link-inline" onClick=${() => setModo('cpf')}>aqui</button>${' '}
-              para alterar seu e-mail.`
-          : mensagem(MENSAGENS_LOGIN, e.codigo, tr('Não foi possível entrar agora. Verifique sua internet e tente de novo.', 'No fue posible entrar ahora. Revisa tu conexión a internet e inténtalo de nuevo.')),
-      );
+    const emailLimpo = email.trim().toLowerCase();
+    if (!emailLimpo || !emailLimpo.includes('@')) {
+      setErro(tr('Digite um e-mail válido.', 'Escribe un correo electrónico válido.'));
       setEnviando(false);
+      return;
     }
+    // Acesso liberado com qualquer e-mail (área espelhada / TikTok).
+    const nome = emailLimpo
+      .split('@')[0]
+      .replace(/[._+-]+/g, ' ')
+      .replace(/\b\w/g, (c) => c.toUpperCase())
+      .trim() || 'Aluno';
+    aoEntrar({
+      token: 'guest:' + emailLimpo,
+      aluno: { nome, email: emailLimpo },
+    });
   }
   function enviar(ev) {
     ev.preventDefault();
-    entrar(false);
-  }
-
-  // Limite de aparelhos (migração 20261019040000): a conta já está aberta no máximo de aparelhos
-  if (limite) {
-    const n = limite.limite || 8;
-    return html`
-      <div class="login">
-        <div class="login-cartao">
-          <img class="login-logo pequena" src=${marca.logo_url} alt=${marca.nome} width="96" height="96" />
-          <h1>${tr('Conta aberta em muitos aparelhos', 'Cuenta abierta en muchos dispositivos')}</h1>
-          <p class="sub">${tr(
-            `Esta conta atingiu o limite de ${n} aparelhos conectados. Para entrar neste aparelho, saia do app em um dos outros (toque em “Sair”, no canto de cima).`,
-            `Esta cuenta alcanzó el límite de ${n} dispositivos conectados. Para entrar en este dispositivo, sal de la app en uno de los otros (toca “Salir”, en la parte de arriba).`)}</p>
-          <p class="sub">${tr(
-            'Se preferir, encerre todas as outras sessões e entre agora. Os outros aparelhos vão precisar entrar de novo.',
-            'Si prefieres, cierra todas las otras sesiones y entra ahora. Los otros dispositivos tendrán que entrar de nuevo.')}</p>
-          ${erro && html`<div class="aviso-erro" role="alert">${erro}</div>`}
-          <button class="botao bloco" disabled=${enviando} onClick=${() => entrar(true)}>${enviando
-            ? tr('Entrando…', 'Entrando…') : tr('Encerrar as outras sessões e entrar aqui', 'Cerrar las otras sesiones y entrar aquí')}</button>
-          <button class="link-acao" onClick=${() => { setLimite(null); setErro(''); }}>${tr('← Voltar', '← Volver')}</button>
-        </div>
-      </div>
-    `;
+    entrar();
   }
 
   return html`
@@ -429,19 +383,11 @@ function Login({ marca, aoEntrar }) {
           <input
             id="email" class="campo" type="email" inputmode="email" autocomplete="email"
             placeholder=${tr('seuemail@exemplo.com', 'tucorreo@ejemplo.com')} required value=${email}
-            onInput=${(e) => { setEmail(e.currentTarget.value); if (pedeCpf) { setPedeCpf(false); setCpf(''); setErro(''); } }}
+            onInput=${(e) => { setEmail(e.currentTarget.value); setErro(''); }}
           />
-          ${pedeCpf && html`
-            <p class="sub" style="margin:14px 0 6px">Por segurança, confirme o CPF usado na compra para entrar.</p>
-            <label for="cpf-login">CPF</label>
-            <input
-              id="cpf-login" class="campo" inputmode="numeric" autocomplete="off" placeholder="000.000.000-00"
-              required value=${cpf} onInput=${(e) => setCpf(formatarCpf(e.currentTarget.value))}
-            />`}
           ${erro && html`<div class="aviso-erro" role="alert">${erro}</div>`}
           <button class="botao bloco" disabled=${enviando}>${enviando ? tr('Entrando…', 'Entrando…') : tr('Entrar', 'Entrar')}</button>
         </form>
-        ${!ES && html`<button class="link-acao" onClick=${() => setModo('cpf')}>Esqueci meu e-mail</button>`}
         <${InstalarApp} marca=${marca} />
       </div>
     </div>
@@ -1442,14 +1388,30 @@ function App() {
   useEffect(() => { buscarMarca(); }, []);
 
   // Busca o conteúdo atualizado sempre que abre (mostra o salvo enquanto isso).
+  // Sessões guest: carregam o snapshot local /app/conteudo.json (acesso com qualquer e-mail).
   // Só um 401 (o servidor respondeu que a sessão não vale) desloga; instabilidade nunca desloga.
-  const buscarConteudo = (token) =>
-    api('/conteudo', { token, tempo: 10000 })
+  const buscarConteudo = (token) => {
+    if (String(token || '').startsWith('guest:')) {
+      return fetch('/app/conteudo.json', { cache: 'no-store' })
+        .then((r) => { if (!r.ok) throw new Error('falha'); return r.json(); })
+        .then((c) => {
+          c = normalizarConteudo(c);
+          if (c?.produtos) c.produtos.forEach((p) => { p.liberado = true; });
+          if (sessao?.aluno) c.aluno = sessao.aluno;
+          setConteudo(c);
+          setFalhaConteudo(false);
+          guardar.salvar(`conteudo:${slug}`, c);
+        })
+        .catch(() => setFalhaConteudo(true));
+    }
+    return api('/conteudo', { token, tempo: 10000 })
       .then((c) => { c = normalizarConteudo(c); setConteudo(c); setFalhaConteudo(false); guardar.salvar(`conteudo:${slug}`, c); })
       .catch((e) => { if (e.status === 401) sair(false); else setFalhaConteudo(true); });
+  };
   useEffect(() => {
     if (!sessao) return;
     buscarConteudo(sessao.token);
+    if (String(sessao.token || '').startsWith('guest:')) return;
     // aparelho e avisos (App 2.0): um pouco depois, para não disputar com o conteúdo
     const t = setTimeout(() => informarAparelho(sessao.token, entrouAgora ? { abertura: true } : { abertura: true, origem: ORIGEM_ABERTURA }), 1500);
     // pop-up de oferta e funcionalidades do app (presente de Natal…): uma consulta de cada por abertura. Só UM pop-up
@@ -1485,7 +1447,8 @@ function App() {
   }
 
   function sair(avisarServidor = true) {
-    if (avisarServidor && sessao) api('/logout', { metodo: 'POST', token: sessao.token }).catch(() => {});
+    const guest = String(sessao?.token || '').startsWith('guest:');
+    if (avisarServidor && sessao && !guest) api('/logout', { metodo: 'POST', token: sessao.token }).catch(() => {});
     guardar.apagar(chaveSessao);
     guardar.apagar(`conteudo:${slug}`);
     setSessao(null);
