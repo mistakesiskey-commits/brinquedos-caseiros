@@ -10,8 +10,9 @@ Landing + área de membros restauradas para TikTok.
 
 ## Checkout
 
-- https://checkout.mundopequenogenio.com.br/VCCL1O8SCBXN (R$ 10)
+- https://pay.cakto.com.br/6pvzfoi_1339922 (R$ 10)
 
 ## Login membros
 
 Use o e-mail da compra (ex.: matheustoledola@gmail.com).
+

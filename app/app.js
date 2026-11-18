@@ -1396,7 +1396,6 @@ function App() {
         .then((r) => { if (!r.ok) throw new Error('falha'); return r.json(); })
         .then((c) => {
           c = normalizarConteudo(c);
-          if (c?.produtos) c.produtos.forEach((p) => { p.liberado = true; });
           if (sessao?.aluno) c.aluno = sessao.aluno;
           setConteudo(c);
           setFalhaConteudo(false);
