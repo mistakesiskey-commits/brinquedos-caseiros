@@ -1,18 +1,17 @@
-# Guia de Brinquedos Caseiros
+﻿# Guia de Brinquedos Caseiros
 
-Landing page restaurada da oferta **Guia de Brinquedos Caseiros** (Mundo Pequeno Gênio), pronta para anúncios no TikTok.
+Landing + área de membros restauradas para TikTok.
 
 ## URLs
 
-- Produção: https://brinquedos-caseiros-ochre.vercel.app/
+- Produção: https://brinquedoscaseirosprfjulia.vercel.app/
+- Área de membros: https://brinquedoscaseirosprfjulia.vercel.app/app
 - GitHub: https://github.com/mistakesiskey-commits/brinquedos-caseiros
-- Original: https://mundopequenogenio.com.br/brinquedos-caseiros/
 
 ## Checkout
 
-- URL: `https://checkout.mundopequenogenio.com.br/VCCL1O8SCBXN`
-- Preço: R$ 10 (pagamento único)
+- https://checkout.mundopequenogenio.com.br/VCCL1O8SCBXN (R$ 10)
 
-## Deploy
+## Login membros
 
-Site estático (HTML + assets). Deploy na Vercel a partir deste repositório.
+Use o e-mail da compra (ex.: matheustoledola@gmail.com).

@@ -1,0 +1,16 @@
+﻿{
+  "name": "Mundo Pequeno Gênio",
+  "short_name": "Pequeno Gênio",
+  "start_url": "/app/",
+  "scope": "/app/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#ffffff",
+  "icons": [
+    {
+      "src": "/app/marcas/mundo-pequeno-genio/icone-180.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    }
+  ]
+}
