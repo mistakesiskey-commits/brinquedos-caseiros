@@ -1,7 +1,8 @@
 {
   "rewrites": [
     { "source": "/app", "destination": "/app/index.html" },
-    { "source": "/app/", "destination": "/app/index.html" }
+    { "source": "/app/", "destination": "/app/index.html" },
+    { "source": "/comunidade-up1", "destination": "/comunidade-up1/" }
   ],
   "headers": [
     {
